@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/cursor-list-combiner/static/css/main.0dea589d.css",
+    "main.js": "/cursor-list-combiner/static/js/main.5abe08a9.js",
+    "index.html": "/cursor-list-combiner/index.html",
+    "main.0dea589d.css.map": "/cursor-list-combiner/static/css/main.0dea589d.css.map",
+    "main.5abe08a9.js.map": "/cursor-list-combiner/static/js/main.5abe08a9.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.0dea589d.css",
+    "static/js/main.5abe08a9.js"
+  ]
+}
