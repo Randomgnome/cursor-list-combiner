@@ -19,15 +19,23 @@ export interface Selection {
   value: string;
 }
 
+export interface InvalidCombination {
+  id: string;
+  name: string;
+  items: Selection[]; // Array of selections that form the invalid combination
+}
+
 export interface ListsState {
   lists: List[];
   lastSelections: Selection[][];
+  invalidCombinations: InvalidCombination[];
 }
 
 // Initial state
 const initialState: ListsState = {
   lists: [],
   lastSelections: [],
+  invalidCombinations: [],
 };
 
 // Create slice
@@ -85,6 +93,39 @@ export const listsSlice = createSlice({
         state.lastSelections = state.lastSelections.slice(0, 5);
       }
     },
+    addInvalidCombination: (state, action: PayloadAction<{ name: string; items: Selection[] }>) => {
+      // Initialize invalidCombinations if it doesn't exist (for backward compatibility with existing persisted state)
+      if (!state.invalidCombinations) {
+        state.invalidCombinations = [];
+      }
+      
+      const newInvalidCombination: InvalidCombination = {
+        id: Date.now().toString(),
+        name: action.payload.name,
+        items: action.payload.items,
+      };
+      state.invalidCombinations.push(newInvalidCombination);
+    },
+    updateInvalidCombination: (state, action: PayloadAction<{ id: string; name: string; items: Selection[] }>) => {
+      // Initialize invalidCombinations if it doesn't exist
+      if (!state.invalidCombinations) {
+        state.invalidCombinations = [];
+      }
+      
+      const invalidCombination = state.invalidCombinations.find(combo => combo.id === action.payload.id);
+      if (invalidCombination) {
+        invalidCombination.name = action.payload.name;
+        invalidCombination.items = action.payload.items;
+      }
+    },
+    deleteInvalidCombination: (state, action: PayloadAction<{ id: string }>) => {
+      // Initialize invalidCombinations if it doesn't exist
+      if (!state.invalidCombinations) {
+        state.invalidCombinations = [];
+      }
+      
+      state.invalidCombinations = state.invalidCombinations.filter(combo => combo.id !== action.payload.id);
+    },
   },
 });
 
@@ -97,10 +138,14 @@ export const {
   updateItem,
   deleteItem,
   addSelection,
+  addInvalidCombination,
+  updateInvalidCombination,
+  deleteInvalidCombination,
 } = listsSlice.actions;
 
 // Export selectors
 export const selectLists = (state: RootState) => state.lists.lists;
 export const selectLastSelections = (state: RootState) => state.lists.lastSelections;
+export const selectInvalidCombinations = (state: RootState) => state.lists.invalidCombinations || [];
 
 export default listsSlice.reducer; 

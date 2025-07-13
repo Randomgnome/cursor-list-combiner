@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAppSelector } from '../app/hooks';
-import { selectLists } from '../features/lists/listsSlice';
+import { useAppSelector, useAppDispatch } from '../app/hooks';
+import { selectLists, selectInvalidCombinations, deleteInvalidCombination, InvalidCombination } from '../features/lists/listsSlice';
+import { generateCombinationDisplayName } from '../utils/combinationUtils';
+import InvalidCombinationBuilder from './InvalidCombinationBuilder';
 
 interface ConfigurationScreenProps {
   darkMode: boolean;
@@ -10,7 +12,38 @@ interface ConfigurationScreenProps {
 
 const ConfigurationScreen: React.FC<ConfigurationScreenProps> = ({ darkMode, toggleDarkMode }) => {
   const lists = useAppSelector(selectLists);
+  const invalidCombinations = useAppSelector(selectInvalidCombinations);
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [editingCombination, setEditingCombination] = useState<InvalidCombination | null>(null);
+
+  const handleAddCombination = () => {
+    setEditingCombination(null);
+    setShowBuilder(true);
+  };
+
+  const handleEditCombination = (combination: InvalidCombination) => {
+    setEditingCombination(combination);
+    setShowBuilder(true);
+  };
+
+  const handleDeleteCombination = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this invalid combination?')) {
+      dispatch(deleteInvalidCombination({ id }));
+    }
+  };
+
+  const handleBuilderCancel = () => {
+    setShowBuilder(false);
+    setEditingCombination(null);
+  };
+
+  const handleBuilderSave = () => {
+    setShowBuilder(false);
+    setEditingCombination(null);
+  };
 
   return (
     <div className="max-w-3xl mx-auto p-4">
@@ -101,6 +134,87 @@ const ConfigurationScreen: React.FC<ConfigurationScreenProps> = ({ darkMode, tog
           </ul>
         )}
       </div>
+
+      {lists.length >= 2 && (
+        <div className={`rounded-lg shadow-lg p-6 mb-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className={`text-xl font-semibold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Invalid Combinations</h2>
+            <button
+              onClick={handleAddCombination}
+              className={`px-4 py-2 text-white font-medium rounded-md shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 ${
+                darkMode 
+                  ? 'bg-gradient-to-r from-red-800 to-red-900 hover:from-red-700 hover:to-red-800 focus:ring-red-500' 
+                  : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 focus:ring-red-500'
+              }`}
+            >
+              Add Invalid Combination
+            </button>
+          </div>
+
+          <p className={`mb-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Define combinations of selections that should not be allowed. These will be automatically re-rolled during selection.
+          </p>
+
+          {(!invalidCombinations || invalidCombinations.length === 0) ? (
+            <div className="text-center py-8">
+              <p className={`mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                No invalid combinations defined yet.
+              </p>
+              <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                Add combinations that should be avoided during selection.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {invalidCombinations && invalidCombinations.map((combination) => (
+                <div key={combination.id} className={`p-4 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
+                  <div className="flex justify-between items-center">
+                    <div className="flex flex-wrap gap-2">
+                      {combination.items.map((item, index) => {
+                        const list = lists.find(l => l.id === item.listId);
+                        return (
+                          <span key={index} className={`px-2 py-1 text-xs rounded-full ${
+                            darkMode ? 'bg-purple-900 text-purple-200' : 'bg-purple-100 text-purple-800'
+                          }`}>
+                            {list?.name}: {item.value}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <div className="flex space-x-2 ml-4">
+                      <button
+                        onClick={() => handleEditCombination(combination)}
+                        className={`px-2 py-1 text-sm rounded ${
+                          darkMode ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                        }`}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCombination(combination.id)}
+                        className={`px-2 py-1 text-sm rounded ${
+                          darkMode ? 'bg-red-800 text-red-200 hover:bg-red-700' : 'bg-red-100 text-red-800 hover:bg-red-200'
+                        }`}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {showBuilder && (
+        <InvalidCombinationBuilder
+          darkMode={darkMode}
+          onCancel={handleBuilderCancel}
+          onSave={handleBuilderSave}
+          existingCombination={editingCombination || undefined}
+        />
+      )}
     </div>
   );
 };

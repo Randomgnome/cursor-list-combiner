@@ -5,6 +5,8 @@ import ConfigurationScreen from './components/ConfigurationScreen';
 import AddListScreen from './components/AddListScreen';
 import EditListScreen from './components/EditListScreen';
 import SelectorScreen from './components/SelectorScreen';
+import { StagewiseToolbar } from '@stagewise/toolbar-react';
+import ReactPlugin from '@stagewise-plugins/react';
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -84,6 +86,13 @@ function App() {
         <Route path="/config/list/:listId" element={<EditListScreen darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
         <Route path="/selector" element={<SelectorScreen darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
       </Routes>
+      
+      {/* Stagewise Toolbar - only renders in development mode */}
+      <StagewiseToolbar 
+        config={{
+          plugins: [ReactPlugin]
+        }}
+      />
     </div>
   );
 }

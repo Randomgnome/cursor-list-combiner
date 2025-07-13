@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAppSelector, useAppDispatch } from '../app/hooks';
-import { selectLists, addSelection, Selection, selectLastSelections } from '../features/lists/listsSlice';
+import { selectLists, addSelection, Selection, selectLastSelections, selectInvalidCombinations } from '../features/lists/listsSlice';
+import { generateValidRandomSelection } from '../utils/combinationUtils';
 
 interface SelectorScreenProps {
   darkMode: boolean;
@@ -12,29 +13,12 @@ interface SelectorScreenProps {
 const SelectorScreen: React.FC<SelectorScreenProps> = ({ darkMode, toggleDarkMode }) => {
   const lists = useAppSelector(selectLists);
   const lastSelections = useAppSelector(selectLastSelections);
+  const invalidCombinations = useAppSelector(selectInvalidCombinations);
   const dispatch = useAppDispatch();
   
   const [isLoading, setIsLoading] = useState(false);
   const [currentSelection, setCurrentSelection] = useState<Selection[] | null>(null);
-
-  const generateRandomSelection = (): Selection[] => {
-    const selection: Selection[] = [];
-    
-    lists.forEach(list => {
-      if (list.items.length > 0) {
-        const randomIndex = Math.floor(Math.random() * list.items.length);
-        const item = list.items[randomIndex];
-        
-        selection.push({
-          listId: list.id,
-          itemId: item.id,
-          value: item.value
-        });
-      }
-    });
-    
-    return selection;
-  };
+  const [error, setError] = useState<string | null>(null);
 
   const isSelectionEqual = (a: Selection[], b: Selection[]): boolean => {
     if (a.length !== b.length) return false;
@@ -62,15 +46,27 @@ const SelectorScreen: React.FC<SelectorScreenProps> = ({ darkMode, toggleDarkMod
     }
     
     setIsLoading(true);
+    setError(null);
     
     setTimeout(() => {
-      let selection = generateRandomSelection();
+      let selection = generateValidRandomSelection(lists, invalidCombinations);
       
-      // Try up to 10 times to get a selection that hasn't appeared in history
+      if (!selection) {
+        setError('No valid combination found. Please review your invalid combinations settings.');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Try to avoid repeating previous selections
       let attempts = 0;
-      const maxAttempts = 20; // Increase max attempts to ensure uniqueness
+      const maxAttempts = 20;
       while (isSelectionInHistory(selection) && attempts < maxAttempts) {
-        selection = generateRandomSelection();
+        const newSelection = generateValidRandomSelection(lists, invalidCombinations);
+        if (newSelection) {
+          selection = newSelection;
+        } else {
+          break; // If we can't find a new valid combination, use the current one
+        }
         attempts++;
       }
       
@@ -116,6 +112,12 @@ const SelectorScreen: React.FC<SelectorScreenProps> = ({ darkMode, toggleDarkMod
         <h1 className={`text-3xl font-bold ${darkMode ? 'text-purple-400' : 'text-indigo-600'}`}>Selector</h1>
         <div className="w-16 h-1 mx-auto rounded-full my-3 bg-gradient-to-r from-purple-500 to-indigo-600"></div>
       </div>
+
+      {error && (
+        <div className={`rounded-lg shadow-lg p-4 mb-6 text-center ${darkMode ? 'bg-red-900 border border-red-700' : 'bg-red-50 border border-red-200'}`}>
+          <p className={`font-medium ${darkMode ? 'text-red-200' : 'text-red-800'}`}>{error}</p>
+        </div>
+      )}
 
       <div className={`rounded-lg shadow-lg p-8 mb-6 text-center ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
         {lists.length === 0 ? (
