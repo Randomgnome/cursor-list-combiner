@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../app/hooks';
 import { selectLists, selectInvalidCombinations, deleteInvalidCombination, InvalidCombination } from '../features/lists/listsSlice';
-import { generateCombinationDisplayName } from '../utils/combinationUtils';
 import InvalidCombinationBuilder from './InvalidCombinationBuilder';
 
 interface ConfigurationScreenProps {
@@ -152,7 +151,7 @@ const ConfigurationScreen: React.FC<ConfigurationScreenProps> = ({ darkMode, tog
           </div>
 
           <p className={`mb-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Define combinations of selections that should not be allowed. These will be automatically re-rolled during selection.
+            Define combinations of selections that should not be allowed.
           </p>
 
           {(!invalidCombinations || invalidCombinations.length === 0) ? (

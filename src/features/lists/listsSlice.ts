@@ -69,15 +69,6 @@ export const listsSlice = createSlice({
         });
       }
     },
-    updateItem: (state, action: PayloadAction<{ listId: string; itemId: string; value: string }>) => {
-      const list = state.lists.find(list => list.id === action.payload.listId);
-      if (list) {
-        const item = list.items.find(item => item.id === action.payload.itemId);
-        if (item) {
-          item.value = action.payload.value;
-        }
-      }
-    },
     deleteItem: (state, action: PayloadAction<{ listId: string; itemId: string }>) => {
       const list = state.lists.find(list => list.id === action.payload.listId);
       if (list) {
@@ -135,7 +126,6 @@ export const {
   updateListName,
   deleteList,
   addItem,
-  updateItem,
   deleteItem,
   addSelection,
   addInvalidCombination,

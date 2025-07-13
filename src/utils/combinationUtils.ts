@@ -1,28 +1,6 @@
 import { Selection, InvalidCombination } from '../features/lists/listsSlice';
 
 /**
- * Generates a user-friendly display name for an invalid combination
- * @param combination - The invalid combination to generate a name for
- * @param lists - Array of available lists to look up list names
- * @returns A descriptive display name
- */
-export const generateCombinationDisplayName = (
-  combination: InvalidCombination, 
-  lists: any[]
-): string => {
-  if (!combination.items || combination.items.length === 0) {
-    return 'Invalid Combination';
-  }
-  
-  const parts = combination.items.map(item => {
-    const list = lists.find(l => l.id === item.listId);
-    return `${list?.name || 'Unknown'}: ${item.value}`;
-  });
-  
-  return parts.join(' + ');
-};
-
-/**
  * Checks if a selection matches an invalid combination
  * @param selection - The current selection to validate
  * @param invalidCombination - The invalid combination to check against
