@@ -15,13 +15,30 @@ export const isSelectionInvalidCombination = (
     return false;
   }
 
-  // Check if all items in the invalid combination are present in the selection
-  return invalidCombination.items.every(invalidItem => 
-    selection.some(selectionItem => 
-      selectionItem.listId === invalidItem.listId && 
-      selectionItem.itemId === invalidItem.itemId
-    )
-  );
+  // Group invalid combination items by list ID
+  const invalidItemsByList = invalidCombination.items.reduce((acc, item) => {
+    if (!acc[item.listId]) {
+      acc[item.listId] = [];
+    }
+    acc[item.listId].push(item);
+    return acc;
+  }, {} as { [key: string]: Selection[] });
+
+  // Get the lists that have invalid combinations defined
+  const invalidListIds = Object.keys(invalidItemsByList);
+  
+  // Check if the selection contains at least one item from each list that has invalid combinations
+  return invalidListIds.every(listId => {
+    const invalidItemsForList = invalidItemsByList[listId];
+    
+    // Check if the current selection has any item from this list that matches the invalid items
+    return selection.some(selectionItem => 
+      selectionItem.listId === listId &&
+      invalidItemsForList.some(invalidItem => 
+        invalidItem.itemId === selectionItem.itemId
+      )
+    );
+  });
 };
 
 /**

@@ -165,21 +165,40 @@ const ConfigurationScreen: React.FC<ConfigurationScreenProps> = ({ darkMode, tog
             </div>
           ) : (
             <div className="space-y-4">
-              {invalidCombinations && invalidCombinations.map((combination) => (
-                <div key={combination.id} className={`p-4 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
-                  <div className="flex justify-between items-center">
-                    <div className="flex flex-wrap gap-2">
-                      {combination.items.map((item, index) => {
-                        const list = lists.find(l => l.id === item.listId);
-                        return (
-                          <span key={index} className={`px-2 py-1 text-xs rounded-full ${
-                            darkMode ? 'bg-purple-900 text-purple-200' : 'bg-purple-100 text-purple-800'
-                          }`}>
-                            {list?.name}: {item.value}
-                          </span>
-                        );
-                      })}
-                    </div>
+              {invalidCombinations && invalidCombinations.map((combination) => {
+                // Group items by list for better display
+                const itemsByList = combination.items.reduce((acc, item) => {
+                  if (!acc[item.listId]) {
+                    acc[item.listId] = [];
+                  }
+                  acc[item.listId].push(item);
+                  return acc;
+                }, {} as { [key: string]: typeof combination.items });
+
+                return (
+                  <div key={combination.id} className={`p-4 rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-2 flex-1">
+                        {Object.entries(itemsByList).map(([listId, listItems]) => {
+                          const list = lists.find(l => l.id === listId);
+                          return (
+                            <div key={listId} className="flex flex-wrap gap-1 items-center">
+                              <span className={`text-xs font-medium px-2 py-1 rounded ${
+                                darkMode ? 'text-gray-300' : 'text-gray-700'
+                              }`}>
+                                {list?.name}:
+                              </span>
+                              {listItems.map((item, index) => (
+                                <span key={index} className={`px-2 py-1 text-xs rounded-full ${
+                                  darkMode ? 'bg-purple-900 text-purple-200' : 'bg-purple-100 text-purple-800'
+                                }`}>
+                                  {item.value}
+                                </span>
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
                     <div className="flex space-x-2 ml-4">
                       <button
                         onClick={() => handleEditCombination(combination)}
@@ -200,7 +219,8 @@ const ConfigurationScreen: React.FC<ConfigurationScreenProps> = ({ darkMode, tog
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
